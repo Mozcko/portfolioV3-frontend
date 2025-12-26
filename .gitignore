@@ -13,12 +13,23 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# environment variables
+# prevent accidental commits of other lock files (assuming pnpm is used)
+package-lock.json
+yarn.lock
+
+# environment variables (ignore all .env files except example)
 .env
-.env.production
+.env.*
+!.env.example
 
 # macOS-specific files
 .DS_Store
+# Windows-specific files
+Thumbs.db
 
 # jetbrains setting folder
 .idea/
+
+# Tooling & Testing
+.vscode/
+coverage/
