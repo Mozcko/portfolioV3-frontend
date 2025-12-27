@@ -33,7 +33,7 @@ const AdminLayout = () => {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-  return <Dashboard onLogout={handleLogout} />;
+  return <Dashboard onLogout={handleLogout} token={token} />;
 };
 
 export default AdminLayout;
