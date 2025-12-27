@@ -1,0 +1,19 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AdminLayout from '../../components/react/admin/AdminLayout';
+
+// Necesario para que Astro sepa qué rutas manejar en modo estático
+export function getStaticPaths() {
+  return [
+    { params: { slug: undefined } }, // Para /admin
+    { params: { slug: 'dashboard' } }, 
+    { params: { slug: 'proyectos' } },
+  ];
+}
+---
+
+<Layout title="Admin Panel" lang="es">
+  <div class="min-h-screen bg-primary">
+     <AdminLayout client:only="react" />
+  </div>
+</Layout>

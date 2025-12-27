@@ -1,1 +1,18 @@
-@import "tailwindcss";
+/* frontend/src/styles/global.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Puedes mantener tus estilos globales adicionales debajo */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+  scroll-behavior: smooth;
+}
+
+/* Copia aquí los estilos base de tu proyecto anterior si los necesitas */
+.bg-primary {
+    background-color: #050816;
+}
