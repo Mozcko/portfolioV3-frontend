@@ -6,6 +6,7 @@ import CreateProject from './CreateProject';
 import CreateCertificate from './CreateCertificate';
 import CreateJob from './CreateJob';
 import CreateSocial from './CreateSocial';
+import ManageI18n from './ManageI18n';
 
 const Dashboard = ({ onLogout, token }) => {
   // --- ESTADOS ---
@@ -48,10 +49,12 @@ const Dashboard = ({ onLogout, token }) => {
     { id: 'certificates', label: 'Certificados', icon: '📜' },
     { id: 'jobs', label: 'Experiencia', icon: '💼' },
     { id: 'socials', label: 'Redes Sociales', icon: '🔗' },
+    { id: 'i18n', label: 'Textos (i18n)', icon: '🌍' },
   ];
 
   // --- FUNCIÓN DE CARGA DE DATOS ---
   const fetchItems = useCallback(async () => {
+    if (activeTab === 'i18n') return; // i18n se maneja internamente en su componente
     setLoading(true);
     try {
       // Llamada dinámica según la pestaña activa
@@ -293,7 +296,7 @@ const Dashboard = ({ onLogout, token }) => {
       <main className="flex-1 p-4 md:p-10 overflow-y-auto h-screen custom-scrollbar">
         
         {/* Encabezado de la vista actual */}
-        {viewState === 'list' && (
+        {viewState === 'list' && activeTab !== 'i18n' && (
            <div className="flex justify-between items-center mb-8">
              <div>
                <h2 className="text-3xl font-bold text-white capitalize">
@@ -312,7 +315,11 @@ const Dashboard = ({ onLogout, token }) => {
 
         {/* Contenido Dinámico */}
         <div className="max-w-7xl mx-auto">
-          {viewState === 'list' ? renderList() : renderForm()}
+          {activeTab === 'i18n' ? (
+            <ManageI18n token={token} showToast={showToast} />
+          ) : (
+            viewState === 'list' ? renderList() : renderForm()
+          )}
         </div>
 
       </main>

@@ -1,0 +1,133 @@
+---
+import { logo } from "../../assets";
+import { styles } from "../../styles";
+
+interface Props {
+  currentLang: string;
+  t: Record<string, any>;
+}
+
+// Recibimos las props directamente
+const { currentLang, t = {} } = Astro.props;
+
+const navLinks = [
+  { id: "about", title: t["navbar.about"] || "About" },
+  { id: "works", title: t["navbar.work"] || "Work" },
+  { id: "contact", title: t["navbar.contact"] || "Contact" },
+];
+---
+
+<nav
+  id="navbar"
+  class={`${styles.paddingX} w-full flex items-center py-5 fixed top-0 z-20 bg-transparent transition-colors duration-300`}
+>
+  <div class='w-full flex justify-between items-center max-w-7xl mx-auto'>
+    
+    <!-- LOGO -->
+    <a
+      href={currentLang === 'es' ? '/es' : '/en'}
+      class='flex items-center gap-2'
+      onclick="window.scrollTo(0, 0);"
+    >
+      <img src={typeof logo === 'string' ? logo : logo.src} alt="logo" class="w-10 h-10 object-cover rounded-full border-2 border-white/10" />
+      <p class='text-white text-[18px] font-bold cursor-pointer flex '>
+        Mozcko &nbsp;
+        <span class='sm:block hidden'> | Portfolio</span>
+      </p>
+    </a>
+
+    <div class="flex gap-8 items-center">
+        <!-- DESKTOP MENU -->
+        <ul class='list-none hidden sm:flex flex-row gap-10'>
+          {navLinks.map((nav) => (
+              <li class="text-secondary hover:text-white text-[18px] font-medium cursor-pointer nav-item">
+                <a href={`#${nav.id}`}>{nav.title}</a>
+              </li>
+          ))}
+        </ul>
+
+        <!-- IDIOMA -->
+        <a
+            href={currentLang === 'es' ? '/en' : '/es'}
+            class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-full text-xs font-bold border border-white/20 transition-all flex items-center gap-2 uppercase"
+        >
+            <span class="text-sm">{currentLang === 'es' ? '🇺🇸' : '🇲🇽'}</span> 
+            {currentLang === 'es' ? 'EN' : 'ES'}
+        </a>
+
+        <!-- MOBILE MENU TOGGLE -->
+        <div class='sm:hidden flex flex-1 justify-end items-center'>
+          <button id="menu-toggle" class="text-white text-2xl focus:outline-none">
+             ☰
+          </button>
+          
+          <div id="mobile-menu" class="hidden p-6 black-gradient absolute top-20 right-0 mx-4 my-2 min-w-[140px] z-10 rounded-xl">
+            <ul class='list-none flex justify-end items-start flex-1 flex-col gap-4'>
+              {navLinks.map((nav) => (
+                <li class="font-poppins font-medium cursor-pointer text-[16px] text-secondary hover:text-white mobile-link">
+                  <a href={`#${nav.id}`}>{nav.title}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  // Lógica del cliente (Vanilla JS es mucho más ligero que React para esto)
+  const navbar = document.getElementById('navbar');
+  const menuToggle = document.getElementById('menu-toggle');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const mobileLinks = document.querySelectorAll('.mobile-link');
+  const navItems = document.querySelectorAll('.nav-item');
+
+  // 1. Efecto Scroll
+  if (navbar) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        navbar.classList.add('bg-[#101428]');
+        navbar.classList.remove('bg-transparent');
+      } else {
+        navbar.classList.add('bg-transparent');
+        navbar.classList.remove('bg-[#101428]');
+      }
+    });
+  }
+
+  // 2. Menú Móvil
+  if (menuToggle && mobileMenu) {
+    menuToggle.addEventListener('click', () => {
+      const isHidden = mobileMenu.classList.contains('hidden');
+      if (isHidden) {
+          mobileMenu.classList.remove('hidden');
+          mobileMenu.classList.add('flex');
+          menuToggle.textContent = "✕";
+      } else {
+          mobileMenu.classList.add('hidden');
+          mobileMenu.classList.remove('flex');
+          menuToggle.textContent = "☰";
+      }
+    });
+  }
+
+  // Cerrar menú al hacer click en un link
+  mobileLinks.forEach(link => {
+    if (mobileMenu && menuToggle) {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+        mobileMenu.classList.remove('flex');
+        menuToggle.textContent = "☰";
+      });
+    }
+  });
+
+  // 3. Active Link (Simple click handler)
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+        navItems.forEach(nav => nav.classList.replace('text-white', 'text-secondary'));
+        item.classList.replace('text-secondary', 'text-white');
+    });
+  });
+</script>

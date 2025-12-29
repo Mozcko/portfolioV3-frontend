@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 // 1. Importamos el componente de crear tecnología
 import CreateTechnology from './CreateTechnology';
+import CreateTag from './CreateTag';
 
 const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) => {
   const [loading, setLoading] = useState(false);
@@ -10,16 +11,25 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
   const [title, setTitle] = useState('');
   const [descEn, setDescEn] = useState('');
   const [descEs, setDescEs] = useState('');
+  const [projectUrl, setProjectUrl] = useState('');
+  const [repoUrl, setRepoUrl] = useState('');
   const [image, setImage] = useState(null);
 
   const [availableTechs, setAvailableTechs] = useState([]);
   const [selectedTechs, setSelectedTechs] = useState([]);
   const [loadingTechs, setLoadingTechs] = useState(true);
 
+  const [availableTags, setAvailableTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [loadingTags, setLoadingTags] = useState(true);
+
   // 2. Estado para controlar el Modal
   const [showTechModal, setShowTechModal] = useState(false);
   const [techModalMode, setTechModalMode] = useState('list'); // 'list' | 'create'
   const [techToDelete, setTechToDelete] = useState(null);
+  const [showTagModal, setShowTagModal] = useState(false);
+  const [tagModalMode, setTagModalMode] = useState('list'); // 'list' | 'create'
+  const [tagToDelete, setTagToDelete] = useState(null);
 
   // Aseguramos que API_URL no tenga slash al final para evitar dobles slashes (//)
   const API_URL = (import.meta.env.PUBLIC_API_URL || '').replace(/\/$/, '');
@@ -50,10 +60,24 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
     }
   }, [API_URL]);
 
+  const fetchTags = useCallback(async () => {
+    try {
+      setLoadingTags(true);
+      const response = await axios.get(`${API_URL}/tags/`);
+      setAvailableTags(response.data);
+    } catch (err) {
+      console.error("Error cargando tags:", err);
+      // No bloqueamos el flujo si fallan los tags
+    } finally {
+      setLoadingTags(false);
+    }
+  }, [API_URL]);
+
   // Cargar al inicio
   useEffect(() => {
     fetchTechnologies();
-  }, [fetchTechnologies]);
+    fetchTags();
+  }, [fetchTechnologies, fetchTags]);
 
   // Cargar datos si estamos en modo edición
   useEffect(() => {
@@ -61,8 +85,13 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
       setTitle(initialData.title || '');
       setDescEn(initialData.description_en || '');
       setDescEs(initialData.description_es || '');
+      setProjectUrl(initialData.project_url || '');
+      setRepoUrl(initialData.repo_url || '');
       if (initialData.technologies) {
         setSelectedTechs(initialData.technologies.map(t => t.id));
+      }
+      if (initialData.tags) {
+        setSelectedTags(initialData.tags.map(t => t.id));
       }
     }
   }, [initialData]);
@@ -81,10 +110,23 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
     }
   };
 
+  const toggleTag = (tagId) => {
+    if (selectedTags.includes(tagId)) {
+      setSelectedTags(selectedTags.filter(id => id !== tagId));
+    } else {
+      setSelectedTags([...selectedTags, tagId]);
+    }
+  };
+
   // 4. Función mágica: Se ejecuta cuando terminas de crear la tecnología en el Modal
   const handleTechCreated = () => {
     setTechModalMode('list'); // Volver a la lista en lugar de cerrar
     fetchTechnologies(); // Recarga la lista para que aparezca la nueva
+  };
+
+  const handleTagCreated = () => {
+    setTagModalMode('list');
+    fetchTags();
   };
 
   // Función para eliminar tecnología desde el modal
@@ -109,6 +151,27 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
     }
   };
 
+  const handleDeleteTagClick = (id) => {
+    setTagToDelete(id);
+  };
+
+  const confirmDeleteTag = async () => {
+    if (!tagToDelete) return;
+    try {
+      await axios.delete(`${API_URL}/tags/${tagToDelete}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (showToast) showToast('Tag eliminado', 'success');
+      fetchTags();
+      if (selectedTags.includes(tagToDelete)) setSelectedTags(prev => prev.filter(t => t !== tagToDelete));
+    } catch (error) {
+      console.error(error);
+      if (showToast) showToast('Error al eliminar tag', 'error');
+    } finally {
+      setTagToDelete(null);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -125,6 +188,8 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
       formData.append('title', title);
       formData.append('description_en', descEn);
       formData.append('description_es', descEs);
+      formData.append('project_url', projectUrl);
+      if (repoUrl) formData.append('repo_url', repoUrl);
       
       if (image) {
         formData.append('image', image);
@@ -132,6 +197,10 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
       
       if (selectedTechs.length > 0) {
         formData.append('technology_ids', selectedTechs.join(','));
+      }
+
+      if (selectedTags.length > 0) {
+        formData.append('tag_ids', selectedTags.join(','));
       }
 
       const headers = {
@@ -229,6 +298,69 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
         </div>
       )}
 
+      {/* --- MODAL PARA ADMINISTRAR TAGS --- */}
+      {showTagModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-2xl">
+            {tagModalMode === 'list' ? (
+              <div className="bg-[#151030] p-8 rounded-2xl border border-white/10 shadow-card relative">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-bold text-white">Administrar Tags</h3>
+                  <button onClick={() => setShowTagModal(false)} className="text-secondary hover:text-white">✕</button>
+                </div>
+
+                {/* Modal de confirmación interno */}
+                {tagToDelete && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl">
+                    <div className="bg-[#100d25] p-6 rounded-xl border border-white/10 max-w-sm w-full text-center mx-4 shadow-2xl">
+                      <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span className="text-2xl">🗑️</span>
+                      </div>
+                      <h4 className="text-lg font-bold text-white mb-2">¿Eliminar tag?</h4>
+                      <p className="text-secondary text-sm mb-4">Esta acción no se puede deshacer.</p>
+                      <div className="flex gap-2 justify-center">
+                        <button onClick={() => setTagToDelete(null)} className="px-3 py-1.5 text-white hover:bg-white/10 rounded-lg text-sm transition-colors">Cancelar</button>
+                        <button onClick={confirmDeleteTag} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition-colors">Eliminar</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="max-h-[400px] overflow-y-auto custom-scrollbar mb-6 space-y-2 pr-2">
+                  {loadingTags ? (
+                    <p className="text-secondary text-center">Cargando...</p>
+                  ) : availableTags.length === 0 ? (
+                    <p className="text-secondary text-center">No hay tags registrados.</p>
+                  ) : (
+                    availableTags.map(tag => (
+                      <div key={tag.id} className="flex items-center justify-between bg-[#100d25] p-3 rounded-lg border border-white/5 hover:border-[#915eff]/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <span className="text-white font-medium">#{tag.name}</span>
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteTagClick(tag.id)}
+                          className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded transition-colors"
+                          title="Eliminar"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3 border-t border-white/10 pt-6">
+                  <button onClick={() => setShowTagModal(false)} className="px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors">Cerrar</button>
+                  <button onClick={() => setTagModalMode('create')} className="bg-[#915eff] hover:bg-[#7e4ee0] text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-purple-500/20 transition-all">+ Nuevo Tag</button>
+                </div>
+              </div>
+            ) : (
+              <CreateTag token={token} onCancel={() => setTagModalMode('list')} onSuccess={handleTagCreated} showToast={showToast} />
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="bg-[#151030] p-8 rounded-2xl border border-white/10 max-w-4xl mx-auto shadow-card">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">{initialData ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
@@ -276,6 +408,31 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
                 required
                 rows="4"
                 className="w-full bg-[#100d25] border border-gray-600 rounded-lg p-3 text-white focus:border-[#915eff] outline-none"
+              />
+            </div>
+          </div>
+
+          {/* URLs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-white mb-2 font-medium">URL del Proyecto *</label>
+              <input
+                type="url"
+                value={projectUrl}
+                onChange={(e) => setProjectUrl(e.target.value)}
+                required
+                className="w-full bg-[#100d25] border border-gray-600 rounded-lg p-3 text-white focus:border-[#915eff] outline-none"
+                placeholder="https://mi-proyecto.com"
+              />
+            </div>
+            <div>
+              <label className="block text-white mb-2 font-medium">URL del Repositorio</label>
+              <input
+                type="url"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                className="w-full bg-[#100d25] border border-gray-600 rounded-lg p-3 text-white focus:border-[#915eff] outline-none"
+                placeholder="https://github.com/usuario/repo"
               />
             </div>
           </div>
@@ -362,6 +519,52 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
                         />
                       )}
                       <span className="text-white text-xs truncate select-none">{tech.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Selector de Tags con Botón "+" */}
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <label className="block text-white font-medium">Tags (Etiquetas)</label>
+              
+              <button 
+                type="button"
+                onClick={() => {
+                  setTagModalMode('list');
+                  setShowTagModal(true);
+                }}
+                className="text-xs bg-[#915eff] hover:bg-[#7e4ee0] text-white px-3 py-1 rounded transition-colors flex items-center gap-1"
+              >
+                <span>⚙️</span> Administrar
+              </button>
+            </div>
+            
+            {loadingTags ? (
+              <p className="text-secondary text-sm">Cargando tags...</p>
+            ) : availableTags.length === 0 ? (
+              <div className="bg-yellow-500/10 border border-yellow-500/50 p-3 rounded text-yellow-200 text-sm">
+                No hay tags. ¡Crea uno con el botón de arriba!
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                {availableTags.map((tag) => {
+                  const isSelected = selectedTags.includes(tag.id);
+                  return (
+                    <div 
+                      key={tag.id}
+                      onClick={() => toggleTag(tag.id)}
+                      className={`cursor-pointer px-3 py-1.5 rounded-full border text-xs font-medium transition-all flex items-center gap-2 ${
+                        isSelected 
+                          ? 'bg-[#915eff] border-[#915eff] text-white' 
+                          : 'bg-[#100d25] border-gray-700 text-secondary hover:border-gray-500 hover:text-white'
+                      }`}
+                    >
+                      <span>#{tag.name}</span>
+                      {isSelected && <span className="text-white font-bold">✓</span>}
                     </div>
                   );
                 })}

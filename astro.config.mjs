@@ -11,7 +11,7 @@ export default defineConfig({
     routing: {
       // false = 'es' en la raíz (/), 'en' en /en
       // true = 'es' en /es, 'en' en /en
-      prefixDefaultLocale: false 
+      prefixDefaultLocale: true
     }
   },
   server: {

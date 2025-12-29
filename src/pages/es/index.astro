@@ -4,15 +4,19 @@ import Navbar from '../../components/astro/Navbar.astro';
 import Hero from '../../components/astro/Hero.astro';
 import { getTranslations } from '../../i18n/utils';
 
-const currentLang = Astro.currentLocale || 'en';
+const currentLang = Astro.currentLocale || 'es';
+// 1. Descargamos las traducciones en el servidor (Build time o SSR)
 const t = await getTranslations(currentLang);
 ---
 
-<Layout title="Mozcko | Portfolio" lang={currentLang}>
+<Layout title="Mozcko | Portafolio" lang={currentLang}>
   <main class="relative z-0 bg-[#101428]">
     <div class="bg-hero-pattern bg-cover bg-no-repeat bg-center">
+      {/* 2. Pasamos 'currentLang' y el objeto 't' (traducciones) a los componentes Astro */}
       <Navbar currentLang={currentLang} t={t} />
       <Hero t={t} />
     </div>
+    
+    {/* Aquí irán el resto de secciones: About, Works, etc. */}
   </main>
 </Layout>
