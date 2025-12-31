@@ -1,0 +1,89 @@
+---
+// 1. Importamos el nuevo componente contenedor de React
+import ProjectList from '../react/ProjectList.jsx';
+
+interface Props {
+    lang: string;
+    t: Record<string, any>;
+}
+const { lang, t = {} } = Astro.props;
+
+interface Technology {
+  id: number;
+  name: string;
+  icon: string;
+}
+
+interface Tag {
+  id: number;
+  name: string;
+}
+
+interface Project {
+  id: number;
+  title: string;
+  description_en: string;
+  description_es: string;
+  project_url: string;
+  repo_url?: string;
+  image_route: string;
+  technologies: Technology[];
+  tags: Tag[];
+}
+
+const API_URL = (import.meta.env.PUBLIC_API_URL || '/api').replace(/\/$/, '');
+
+// 2. Hacemos todas las llamadas a la API desde el componente Astro
+let projects: Project[] = [];
+let technologies: Technology[] = [];
+let tags: Tag[] = [];
+let fetchError = false;
+
+try {
+  const [projectsRes, techsRes, tagsRes] = await Promise.all([
+    fetch(`${API_URL}/projects/`),
+    fetch(`${API_URL}/technologies/`),
+    fetch(`${API_URL}/tags/`)
+  ]);
+
+  if (projectsRes.ok) projects = await projectsRes.json();
+  else console.error('Failed to fetch projects:', projectsRes.status, projectsRes.statusText);
+
+  if (techsRes.ok) technologies = await techsRes.json();
+  else console.error('Failed to fetch technologies:', techsRes.status, techsRes.statusText);
+
+  if (tagsRes.ok) tags = await tagsRes.json();
+  else console.error('Failed to fetch tags:', tagsRes.status, tagsRes.statusText);
+
+  if (!projectsRes.ok) fetchError = true; // Solo marcamos error si los proyectos fallan
+
+} catch (error) {
+  console.error('Error fetching project data:', error);
+  fetchError = true;
+}
+---
+<section id="works" class="bg-primary text-white py-20 px-4 sm:px-6 lg:px-8 scroll-mt-20">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center">
+        <p class="text-secondary uppercase tracking-wider">{t['projects.my_work'] || 'Mi Trabajo'}</p>
+        <h2 class="text-4xl sm:text-5xl font-extrabold mt-2">{t['projects.project'] || 'Proyectos'}.</h2>
+      </div>
+
+      {fetchError ? (
+        <div class="text-center text-secondary col-span-full mt-12">
+          <p>No se pudieron cargar los proyectos en este momento. Por favor, inténtalo de nuevo más tarde.</p>
+        </div>
+      ) : (
+        <div class="mt-12">
+          <ProjectList 
+            projects={projects} 
+            technologies={technologies} 
+            tags={tags} 
+            lang={lang}
+            t={t}
+            client:load 
+          />
+        </div>
+      )}
+    </div>
+</section>

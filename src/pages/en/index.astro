@@ -2,6 +2,8 @@
 import Layout from '../../layouts/Layout.astro';
 import Navbar from '../../components/astro/Navbar.astro';
 import Hero from '../../components/astro/Hero.astro';
+import Projects from '../../components/astro/Projects.astro';
+import About from '../../components/astro/About.astro';
 import { getTranslations } from '../../i18n/utils';
 
 const currentLang = Astro.currentLocale || 'en';
@@ -9,10 +11,12 @@ const t = await getTranslations(currentLang);
 ---
 
 <Layout title="Mozcko | Portfolio" lang={currentLang}>
-  <main class="relative z-0 bg-[#101428]">
+  <main class="relative z-0 ">
     <div class="bg-hero-pattern bg-cover bg-no-repeat bg-center">
       <Navbar currentLang={currentLang} t={t} />
       <Hero t={t} />
     </div>
+    <About lang={currentLang} t={t} />
+    <Projects lang={currentLang} t={t} />
   </main>
 </Layout>

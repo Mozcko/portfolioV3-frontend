@@ -1,0 +1,20 @@
+---
+interface Props {
+  lang: string;
+  t: Record<string, any>;
+}
+
+const { lang, t = {} } = Astro.props;
+
+---
+
+<section id="about" class="bg-primary text-white py-16 md:py-20">
+    <div class="container mx-auto px-6 md:px-8">
+        <h2 class="text-center text-4xl font-bold capitalize mb-8">
+            {t['about.about_me']}
+        </h2>
+        <p class="text-center text-lg max-w-3xl mx-auto">
+            {t['about.about_text']}
+        </p>
+    </div>
+</section>

@@ -1,5 +1,5 @@
 ---
-import { logo } from "../../assets";
+import { logo, menu, close } from "../../assets";
 import { styles } from "../../styles";
 
 interface Props {
@@ -57,10 +57,10 @@ const navLinks = [
 
         <!-- MOBILE MENU TOGGLE -->
         <div class='sm:hidden flex flex-1 justify-end items-center'>
-          <button id="menu-toggle" class="text-white text-2xl focus:outline-none">
-             ☰
+          <button id="menu-toggle" class="text-white text-2xl focus:outline-none w-7 h-7">
+             <img id="menu-icon" src={menu.src} alt="menu" class="w-full h-full object-contain" />
+             <img id="close-icon" src={close.src} alt="close" class="w-full h-full object-contain hidden" />
           </button>
-          
           <div id="mobile-menu" class="hidden p-6 black-gradient absolute top-20 right-0 mx-4 my-2 min-w-[140px] z-10 rounded-xl">
             <ul class='list-none flex justify-end items-start flex-1 flex-col gap-4'>
               {navLinks.map((nav) => (
@@ -80,6 +80,8 @@ const navLinks = [
   const navbar = document.getElementById('navbar');
   const menuToggle = document.getElementById('menu-toggle');
   const mobileMenu = document.getElementById('mobile-menu');
+  const menuIcon = document.getElementById('menu-icon');
+  const closeIcon = document.getElementById('close-icon');
   const mobileLinks = document.querySelectorAll('.mobile-link');
   const navItems = document.querySelectorAll('.nav-item');
 
@@ -97,28 +99,31 @@ const navLinks = [
   }
 
   // 2. Menú Móvil
-  if (menuToggle && mobileMenu) {
+  if (menuToggle && mobileMenu && menuIcon && closeIcon) {
     menuToggle.addEventListener('click', () => {
       const isHidden = mobileMenu.classList.contains('hidden');
       if (isHidden) {
           mobileMenu.classList.remove('hidden');
           mobileMenu.classList.add('flex');
-          menuToggle.textContent = "✕";
+          menuIcon.classList.add('hidden');
+          closeIcon.classList.remove('hidden');
       } else {
           mobileMenu.classList.add('hidden');
           mobileMenu.classList.remove('flex');
-          menuToggle.textContent = "☰";
+          menuIcon.classList.remove('hidden');
+          closeIcon.classList.add('hidden');
       }
     });
   }
 
   // Cerrar menú al hacer click en un link
   mobileLinks.forEach(link => {
-    if (mobileMenu && menuToggle) {
+    if (mobileMenu && menuToggle && menuIcon && closeIcon) {
       link.addEventListener('click', () => {
         mobileMenu.classList.add('hidden');
         mobileMenu.classList.remove('flex');
-        menuToggle.textContent = "☰";
+        menuIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
       });
     }
   });

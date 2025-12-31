@@ -24,5 +24,5 @@ export default defineConfig({
     },
   },
   // Opcional: si usas 'hybrid' o 'server' para el admin en el futuro
-  // output: 'static', 
+  output: 'server', 
 });
