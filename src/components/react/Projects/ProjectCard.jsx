@@ -1,7 +1,7 @@
 import React from 'react';
 // 1. Importamos los iconos directamente como módulos
-import githubIcon from '../../assets/github.svg';
-import linkIcon from '../../assets/link.svg';
+import githubIcon from '../../../assets/github.svg';
+import linkIcon from '../../../assets/link.svg';
 
 const ProjectCard = ({ project, lang = 'es' }) => {
   const API_URL = (import.meta.env.PUBLIC_API_URL || '/api').replace(/\/$/, '');
