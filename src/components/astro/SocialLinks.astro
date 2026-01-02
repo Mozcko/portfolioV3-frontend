@@ -1,0 +1,43 @@
+---
+interface Social {
+  name: string;
+  link: string;
+  image_route?: string;
+  file?: string;
+  icon?: string;
+  image?: string;
+}
+
+interface Props {
+  socials: Social[];
+}
+
+const { socials } = Astro.props;
+
+// Helper para imágenes (Moved from Hero.astro)
+const getImageUrl = (path: string | undefined) => {
+    if (!path) return null;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const API_URL = (import.meta.env.PUBLIC_API_URL || '').replace(/\/$/, '');
+    try {
+        const urlObj = new URL(API_URL);
+        return `${urlObj.origin}${path}`;
+    } catch(e) { return path; }
+};
+---
+
+<div class="mt-8 flex flex-wrap justify-center sm:justify-start gap-4">
+  {socials.map((social) => (
+    <a
+      href={social.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={social.name}
+      class="bg-tertiary border border-white/10 hover:bg-white/10 p-3 rounded-full transition-colors flex items-center justify-center"
+    >
+      {(social.image_route || social.file || social.icon || social.image) && (
+        <img src={getImageUrl(social.image_route || social.file || social.icon || social.image)} alt={social.name} class="w-6 h-6 object-contain" />
+      )}
+    </a>
+  ))}
+</div>

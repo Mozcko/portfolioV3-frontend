@@ -3,6 +3,7 @@ import { styles } from "../../styles";
 import { logo } from "../../assets";
 // Importamos el componente React para la parte 3D
 import ComputersCanvas from "../react/canvas/Computers.jsx";
+import Typewriter from "../react/hero/Typewriter.jsx";
 
 interface Props {
   t: Record<string, any>;
@@ -21,36 +22,17 @@ const { t = {} } = Astro.props;
 
 // --- SERVER SIDE DATA FETCHING ---
 // Esto ocurre en tiempo de construcción o en el servidor, no en el navegador del usuario.
-let socials: Social[] = [];
-try {
-  const API_URL = (import.meta.env.PUBLIC_API_URL || '').replace(/\/$/, '');
-  const response = await fetch(`${API_URL}/socials/`);
-  if (response.ok) {
-    socials = await response.json();
-  }
-} catch (error) {
-  console.error("Error fetching socials in Hero:", error);
-}
-
-// Helper para imágenes
-const getImageUrl = (path: string | undefined) => {
-    if (!path) return null;
-    if (path.startsWith('http') || path.startsWith('data:')) return path;
-    const API_URL = (import.meta.env.PUBLIC_API_URL || '').replace(/\/$/, '');
-    try {
-        const urlObj = new URL(API_URL);
-        return `${urlObj.origin}${path}`;
-    } catch(e) { return path; }
-};
+const socials: Social[] = [];
+const API_URL = (import.meta.env.PUBLIC_API_URL || '').replace(/\/$/, '');
 
 // Preparamos los skills para pasarlos al script del cliente
-const skills = Array.isArray(t["hero.skills"]) ? t["hero.skills"] : ["Full Stack Developer", "Linux Enthusiast"];
+const skills: string[] = Array.isArray(t["hero.skills"]) ? t["hero.skills"] : ["Full Stack Developer", "Linux Enthusiast"];
 ---
 
-<section class="relative w-full h-screen mx-auto flex flex-col lg:flex-row overflow-hidden">
+<section class="relative w-full h-[93vh] mx-auto flex flex-col lg:flex-row overflow-hidden bg-primary bg-hero-pattern bg-cover bg-no-repeat bg-center">
   
   <!-- Lado Izquierdo: HTML Estático (Carga instantánea) -->
-  <div class={`flex-1 lg:flex-[1.5] relative ${styles.paddingX} flex flex-col justify-center h-full z-10 pt-20 sm:pt-0`}>
+  <div class={`flex-1 lg:flex-[1.5] relative ${styles.paddingX} flex flex-col justify-center h-full z-10 pt-32`}>
     
     <!-- Header -->
     <div class="flex flex-col sm:flex-row items-center gap-6 mb-2">
@@ -67,81 +49,84 @@ const skills = Array.isArray(t["hero.skills"]) ? t["hero.skills"] : ["Full Stack
             {t["hero.i_am"] || "and I am a:"}
           </p>
           <p class={`${styles.heroSubText} text-[#915eff] font-mono`}>
-              <span id="typewriter-text"></span>
-              <span id="cursor" class="opacity-100 ml-1">_</span>
+            <Typewriter 
+              client:load 
+              words={skills} 
+              textClass="" 
+              cursorClass="ml-1" 
+            />
           </p>
         </div>
 
         <!-- Redes Sociales (Renderizadas en servidor) -->
-        <div class="mt-8 flex flex-wrap justify-center sm:justify-start gap-4">
-          {socials.map((social) => (
-            <a
-              href={social.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={social.name}
-              class="bg-tertiary border border-white/10 hover:bg-white/10 p-3 rounded-full transition-colors flex items-center justify-center"
-            >
-              {(social.image_route || social.file || social.icon || social.image) && (
-                <img src={getImageUrl(social.image_route || social.file || social.icon || social.image)} alt={social.name} class="w-6 h-6 object-contain" />
-              )}
-            </a>
-          ))}
+        <!-- Contenedor para carga del cliente (mejora velocidad de navegación) -->
+        <div id="hero-socials-container" class="mt-5 flex gap-4 min-h-[40px]">
+          <div class="w-10 h-10 rounded-full bg-white/10 animate-pulse border border-white/5"></div>
+          <div class="w-10 h-10 rounded-full bg-white/10 animate-pulse border border-white/5"></div>
+          <div class="w-10 h-10 rounded-full bg-white/10 animate-pulse border border-white/5"></div>
         </div>
     </div>
   </div>
 
   <!-- Lado Derecho: Componente React (Isla Interactiva) -->
-  <div class="flex-1 w-full h-[40vh] lg:h-full relative">
+  <div class="flex-1 w-full h-[40vh] lg:h-full relative" transition:persist>
     <!-- client:visible asegura que solo cargue el JS de Three.js cuando el usuario lo vea -->
     <ComputersCanvas client:visible />
   </div>
 </section>
 
-<!-- Script ligero para el efecto de escritura -->
-<script define:vars={{ skills }}>
-  const textElement = document.getElementById('typewriter-text');
-  const cursorElement = document.getElementById('cursor');
-  
-  let skillIndex = 0;
-  let charIndex = 0;
-  let isDeleting = false;
-  let typeSpeed = 100;
+<script define:vars={{ API_URL }}>
+  document.addEventListener('astro:page-load', async () => {
+    const container = document.getElementById('hero-socials-container');
+    if (!container) return;
 
-  function type() {
-    if (!textElement) return;
+    const getImageUrl = (path) => {
+      if (!path) return '';
+      if (path.startsWith('http') || path.startsWith('data:')) return path;
+      try {
+        const urlObj = new URL(API_URL);
+        return `${urlObj.origin}${path}`;
+      } catch(e) { return path; }
+    };
 
-    const currentSkill = skills[skillIndex];
-    
-    if (isDeleting) {
-      textElement.textContent = currentSkill.substring(0, charIndex - 1);
-      charIndex--;
-      typeSpeed = 50;
-    } else {
-      textElement.textContent = currentSkill.substring(0, charIndex + 1);
-      charIndex++;
-      typeSpeed = 100;
+    const renderSocials = (socials) => {
+      container.innerHTML = socials.map((social, index) => `
+        <a href="${social.link}" target="_blank" rel="noopener noreferrer" 
+           style="animation-delay: ${index * 100}ms"
+           class="social-icon-anim opacity-0 w-10 h-10 flex justify-center items-center rounded-full bg-white/5 hover:bg-white/20 transition-colors border border-white/10">
+          <img src="${getImageUrl(social.image_route || social.image || social.icon)}" 
+               alt="${social.name}" 
+               class="w-3/5 h-3/5 object-contain" />
+        </a>
+      `).join('');
+    };
+
+    // Optimización: Usar caché de sesión para evitar fetch en cada navegación
+    const cached = sessionStorage.getItem('hero_socials_cache');
+    if (cached) {
+      renderSocials(JSON.parse(cached));
+      return;
     }
 
-    if (!isDeleting && charIndex === currentSkill.length) {
-      isDeleting = true;
-      typeSpeed = 1500; // Pausa al terminar de escribir
-    } else if (isDeleting && charIndex === 0) {
-      isDeleting = false;
-      skillIndex = (skillIndex + 1) % skills.length;
-      typeSpeed = 500; // Pausa antes de empezar nueva palabra
+    try {
+      const response = await fetch(`${API_URL}/socials/`);
+      if (response.ok) {
+        const socials = await response.json();
+        renderSocials(socials);
+        sessionStorage.setItem('hero_socials_cache', JSON.stringify(socials));
+      }
+    } catch (error) {
+      console.error("Error fetching socials client-side:", error);
     }
-
-    setTimeout(type, typeSpeed);
-  }
-
-  // Efecto parpadeo cursor
-  setInterval(() => {
-    if(cursorElement) cursorElement.classList.toggle('opacity-0');
-  }, 500);
-
-  // Iniciar
-  if (skills.length > 0 && textElement) {
-    setTimeout(type, 1000);
-  }
+  });
 </script>
+
+<style>
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  :global(.social-icon-anim) {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+</style>
