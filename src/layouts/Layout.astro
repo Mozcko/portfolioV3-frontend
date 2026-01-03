@@ -1,11 +1,11 @@
 ---
 // 1. CAMBIO AQUÍ: Importamos ClientRouter en lugar de ViewTransitions
-import { ClientRouter } from 'astro:transitions';
-import '../styles/global.css';
+import { ClientRouter } from "astro:transitions";
+import "../styles/global.css";
 
 interface Props {
-	title: string;
-    lang?: string;
+  title: string;
+  lang?: string;
 }
 
 const { title, lang = "es" } = Astro.props;
@@ -13,17 +13,152 @@ const { title, lang = "es" } = Astro.props;
 
 <!doctype html>
 <html lang={lang}>
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="description" content="Mozcko Portfolio" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>{title}</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Mozcko Portfolio" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+
+    <ClientRouter />
+  </head>
+  <body class="relative z-0 bg-transparent">
+    <canvas id="background-animado" transition:persist></canvas>
+    <div class="relative z-10">
+      <slot />
+    </div>
+
+    <style>
+      #background-animado {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      html {
+        background-color: #050816; /* Color base en la raíz para evitar flashes blancos */
+      }
+
+      /* Fuerza transparencia en TODAS las capas de fondo de la plantilla para ver las estrellas */
+      :global(.bg-primary),
+      :global(.bg-tertiary),
+      :global(.bg-black-100),
+      :global(.bg-black-200),
+      :global(.bg-hero-pattern),
+      :global(section) {
+        background-color: transparent !important;
+        background-image: none !important;
+      }
+    </style>
+
+    <script>
+    // Variable global para asegurar que el fondo SOLO se inicie una vez
+    if (!(window as any).backgroundAnimadoInitialized) {
+        (window as any).backgroundAnimadoInitialized = true;
+
+        const canvas = document.getElementById('background-animado') as HTMLCanvasElement;
         
-        <ClientRouter />
-	</head>
-	<body class="bg-primary relative z-0">
-		<slot />
-	</body>
+        if (canvas) {
+            const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+            let width: number, height: number;
+            type Particle = {
+                x: number;
+                y: number;
+                vx: number;
+                vy: number;
+                size: number;
+            };
+            let particles: Particle[] = [];
+            
+            // CORRECCIÓN: Cantidades mucho más bajas y optimizadas
+            // Antes: 10000 (Error) -> Ahora: 150 (Correcto)
+            const isMobile = window.innerWidth < 768;
+            const particleCount = isMobile ? 60 : 150; 
+            const connectionDistance = 120; // Distancia para dibujar líneas
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+
+            function createParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        vx: (Math.random() - 0.5) * 0.5, // Velocidad original
+                        vy: (Math.random() - 0.5) * 0.5,
+                        size: Math.random() * 2 + 1
+                    });
+                }
+            }
+
+            function animate() {
+                // Limpiamos el canvas en cada frame
+                ctx.clearRect(0, 0, width, height);
+                
+                const len = particles.length;
+                for (let i = 0; i < len; i++) {
+                    let p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Rebote en los bordes
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                    // Dibujar partícula
+                    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Dibujar conexiones (Líneas)
+                    for (let j = i + 1; j < len; j++) {
+                        let p2 = particles[j];
+                        let dx = p.x - p2.x;
+                        let dy = p.y - p2.y;
+                        
+                        // Optimización rápida: si están muy lejos en X o Y, ni calculamos la distancia real
+                        if (Math.abs(dx) > connectionDistance || Math.abs(dy) > connectionDistance) continue;
+
+                        let distance = Math.sqrt(dx*dx + dy*dy);
+                        if (distance < connectionDistance) {
+                            // La opacidad depende de la distancia (más cerca = más visible)
+                            ctx.strokeStyle = `rgba(255,255,255,${0.15 * (1 - distance/connectionDistance)})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+
+            // Listeners
+            window.addEventListener('resize', () => {
+                resize();
+                createParticles();
+            });
+
+            // Inicialización
+            resize();
+            createParticles();
+            animate();
+            
+            console.log("🌌 Fondo animado iniciado correctamente (Versión Ligera)");
+        }
+    }
+</script>
+  </body>
 </html>

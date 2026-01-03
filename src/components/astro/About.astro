@@ -1,20 +1,52 @@
 ---
+import { styles } from "../../styles";
+// Asegúrate de que TiltCard.jsx exista en esta ruta (la creamos en el paso anterior)
+import TiltCard from "../react/about/TiltCard.jsx";
+
+// Importamos la imagen para pasarla al componente React
+// (Si ya tienes tu foto, cámbiala aquí. Si no, usa el logo temporalmente)
+import profileImg from "../../assets/logo.jpeg";
+
 interface Props {
-  lang: string;
   t: Record<string, any>;
+  lang: string;
 }
 
-const { lang, t = {} } = Astro.props;
-
+const { t = {}, lang } = Astro.props;
 ---
 
-<section id="about" class="bg-primary text-white py-16 md:py-20">
-    <div class="container mx-auto px-6 md:px-8">
-        <h2 class="text-center text-4xl font-bold capitalize mb-8">
-            {t['about.about_me']}
-        </h2>
-        <p class="text-center text-lg max-w-3xl mx-auto">
-            {t['about.about_text']}
-        </p>
+<section id="about" class={`${styles.padding} relative z-0 max-w-7xl mx-auto`}>
+  
+  <div class="flex flex-col-reverse lg:flex-row gap-10 items-center overflow-hidden">
+    
+    <div class="flex-1 flex justify-center lg:justify-start w-full relative z-10">
+         <TiltCard client:visible imageSrc={profileImg.src} />
     </div>
-</section>
+
+    <div class="flex-1 flex flex-col items-start">
+        <span class={`${styles.sectionSubText} block`}>
+            {/* Si no hay traducción para "Introducción", usamos un default inteligente */}
+            {t["about.introduction"] || (lang === 'es' ? "Introducción" : "Introduction")}
+        </span>
+        
+        <h2 class={`${styles.sectionHeadText} mb-4`}>
+            {/* Aquí usamos tu traducción "Sobre mí" */}
+            {t["about.about_me"] || "Overview."}
+        </h2>
+
+        <div class="text-secondary text-[17px] max-w-3xl leading-[30px] text-justify">
+            <p class="mb-6">
+                {/* Aquí va el texto largo descriptivo */}
+                {t["about.about_text"] || 
+                "I'm a skilled software developer with experience in TypeScript and JavaScript..."}
+            </p>
+            
+            <a href="#contact" class="inline-block bg-[#915eff] text-white py-3 px-8 rounded-xl font-bold hover:bg-[#7e4bd6] transition-all transform hover:scale-105 shadow-md hover:shadow-lg">
+                {lang === 'es' ? 'Contáctame' : 'Contact Me'}
+            </a>
+        </div>
+    </div>
+
+  </div>
+  
+  </section>
