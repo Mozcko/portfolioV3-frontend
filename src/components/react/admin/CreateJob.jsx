@@ -7,14 +7,13 @@ const CreateJob = ({ token, onCancel, onSuccess, initialData, showToast }) => {
   
   // Estados del formulario
   const [title, setTitle] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(''); // Formato esperado: "YYYY-MM"
+  const [endDate, setEndDate] = useState('');     // Formato esperado: "YYYY-MM"
   const [currentJob, setCurrentJob] = useState(false);
-  const [file, setFile] = useState(null); // Logo de la empresa
+  const [file, setFile] = useState(null);
 
   const API_URL = (import.meta.env.PUBLIC_API_URL || '').replace(/\/$/, '');
 
-  // Helper para construir la URL completa de la imagen
   const getImageUrl = (path) => {
     if (!path) return null;
     if (path.startsWith('http') || path.startsWith('data:')) return path;
@@ -26,12 +25,20 @@ const CreateJob = ({ token, onCancel, onSuccess, initialData, showToast }) => {
     }
   };
 
+  // Helper para cortar la fecha "YYYY-MM-DD" a "YYYY-MM" para el input
+  const formatForInput = (dateString) => {
+    if (!dateString) return '';
+    // Si viene como "2023-05-15T00:00:00" o "2023-05-15" tomamos los primeros 7 caracteres
+    return dateString.substring(0, 7); 
+  };
+
   // Cargar datos si estamos en modo edición
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title || '');
-      setStartDate(initialData.start_date || '');
-      setEndDate(initialData.end_date || '');
+      // Convertimos las fechas al formato del input type="month"
+      setStartDate(formatForInput(initialData.start_date));
+      setEndDate(formatForInput(initialData.end_date));
       setCurrentJob(initialData.current_job || false);
     }
   }, [initialData]);
@@ -63,19 +70,18 @@ const CreateJob = ({ token, onCancel, onSuccess, initialData, showToast }) => {
     try {
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('start_date', startDate);
       
-      // Manejo de fecha de fin
+      // Enviamos el string directo "YYYY-MM"
+      // El backend lo recibirá como string y tu Timeline lo entenderá perfecto
+      formData.append('start_date', startDate); 
+      
       if (currentJob) {
-        // Dependiendo de tu backend, a veces prefieren no enviar el campo o enviarlo vacío
-        // Si tu backend espera explícitamente null, FormData lo convierte a string "null".
-        // Lo más seguro es no enviarlo o enviar string vacío si el backend lo acepta.
-        // Aquí probaremos enviando string vacío si es null.
+        // Si es trabajo actual, no enviamos end_date o enviamos vacío
       } else {
         formData.append('end_date', endDate);
       }
 
-      formData.append('current_job', currentJob); // Axios lo convierte a string "true"/"false"
+      formData.append('current_job', currentJob);
       
       if (file) {
         formData.append('file', file);
@@ -83,15 +89,12 @@ const CreateJob = ({ token, onCancel, onSuccess, initialData, showToast }) => {
 
       const headers = {
         'Authorization': `Bearer ${token}`,
-        // No definir Content-Type manualmente con FormData
       };
 
       if (initialData) {
-        // Modo Edición (PUT)
         await axios.put(`${API_URL}/jobs/${initialData.id}`, formData, { headers });
         if (showToast) showToast('¡Experiencia actualizada con éxito!', 'success');
       } else {
-        // Modo Creación (POST)
         await axios.post(`${API_URL}/jobs/`, formData, { headers });
         if (showToast) showToast('¡Experiencia laboral agregada con éxito!', 'success');
       }
@@ -133,29 +136,29 @@ const CreateJob = ({ token, onCancel, onSuccess, initialData, showToast }) => {
           />
         </div>
 
-        {/* Fechas */}
+        {/* Fechas con type="month" */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-white mb-2 font-medium">Fecha de Inicio *</label>
             <input
-              type="text"
+              type="month" 
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               required
-              className="w-full bg-[#100d25] border border-gray-600 rounded-lg p-3 text-white focus:border-[#915eff] outline-none"
-              placeholder="Ej: March 2020"
+              className="w-full bg-[#100d25] border border-gray-600 rounded-lg p-3 text-white focus:border-[#915eff] outline-none [color-scheme:dark]"
             />
+            <p className="text-xs text-secondary mt-1">Selecciona Mes y Año</p>
           </div>
           
           <div>
             <label className="block text-white mb-2 font-medium">Fecha de Fin</label>
             <input
-              type="text"
+              type="month"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               disabled={currentJob}
-              className={`w-full bg-[#100d25] border border-gray-600 rounded-lg p-3 text-white focus:border-[#915eff] outline-none ${currentJob ? 'opacity-50 cursor-not-allowed' : ''}`}
-              placeholder="Ej: April 2023"
+              required={!currentJob} // Requerido solo si no es el trabajo actual
+              className={`w-full bg-[#100d25] border border-gray-600 rounded-lg p-3 text-white focus:border-[#915eff] outline-none [color-scheme:dark] ${currentJob ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
           </div>
         </div>

@@ -1,0 +1,77 @@
+---
+import { styles } from "../../styles";
+import ExperienceTimeline from "../react/experience/ExperienceTimeline.jsx";
+
+interface Props {
+  t: Record<string, any>;
+  lang: string;
+}
+
+const { t = {}, lang } = Astro.props;
+
+// --- OBTENER DATOS (Server Side) ---
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+let jobs = [];
+
+try {
+  // Simulamos la llamada a tu API real
+  const res = await fetch(`${API_URL}/jobs`); // Asegúrate de que esta ruta exista en tu backend
+  if (res.ok) {
+    jobs = await res.json();
+  } else {
+    // Datos Mock (Falsos) por si falla la API o no hay datos aún
+    jobs = [
+      {
+        title: "Senior Full Stack Developer",
+        start_date: "2023-01-15",
+        current_job: true,
+        file: "https://cdn-icons-png.flaticon.com/512/732/732221.png", // Icono Microsoft ejemplo
+      },
+      {
+        title: "Web Developer",
+        start_date: "2021-05-01",
+        end_date: "2022-12-30",
+        current_job: false,
+        file: "https://cdn-icons-png.flaticon.com/512/5968/5968292.png", // Icono JS
+      },
+       {
+        title: "Junior Freelance",
+        start_date: "2020-03-01",
+        end_date: "2021-04-01",
+        current_job: false,
+        file: null, 
+      }
+    ];
+  }
+} catch (e) {
+  console.error("Error fetching jobs:", e);
+}
+---
+
+<section id="experience" class={`${styles.padding} relative z-0 max-w-7xl mx-auto overflow-hidden`}>
+  
+  <div class="flex flex-col mb-10">
+    <span class={`${styles.sectionSubText}`}>
+      {t["experience.subtitle"] || "What I have done so far"}
+    </span>
+    <h2 class={`${styles.sectionHeadText}`}>
+      {t["experience.title"] || "Work Experience."}
+    </h2>
+  </div>
+
+  <div class="w-full flex flex-col">
+    <ExperienceTimeline client:visible jobs={jobs} />
+  </div>
+
+</section>
+
+<style>
+  /* Ocultar barra de scroll pero permitir funcionalidad */
+  :global(.hide-scrollbar::-webkit-scrollbar) {
+    display: none;
+  }
+  :global(.hide-scrollbar) {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>

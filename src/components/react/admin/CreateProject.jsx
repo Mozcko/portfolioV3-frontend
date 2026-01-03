@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-// 1. Importamos el componente de crear tecnología
 import CreateTechnology from './CreateTechnology';
 import CreateTag from './CreateTag';
 
@@ -11,7 +10,7 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
   const [title, setTitle] = useState('');
   const [descEn, setDescEn] = useState('');
   const [descEs, setDescEs] = useState('');
-  const [projectUrl, setProjectUrl] = useState('');
+  const [projectUrl, setProjectUrl] = useState(''); // Ahora es opcional
   const [repoUrl, setRepoUrl] = useState('');
   const [image, setImage] = useState(null);
 
@@ -23,18 +22,16 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
   const [selectedTags, setSelectedTags] = useState([]);
   const [loadingTags, setLoadingTags] = useState(true);
 
-  // 2. Estado para controlar el Modal
+  // Estados modales
   const [showTechModal, setShowTechModal] = useState(false);
-  const [techModalMode, setTechModalMode] = useState('list'); // 'list' | 'create'
+  const [techModalMode, setTechModalMode] = useState('list');
   const [techToDelete, setTechToDelete] = useState(null);
   const [showTagModal, setShowTagModal] = useState(false);
-  const [tagModalMode, setTagModalMode] = useState('list'); // 'list' | 'create'
+  const [tagModalMode, setTagModalMode] = useState('list');
   const [tagToDelete, setTagToDelete] = useState(null);
 
-  // Aseguramos que API_URL no tenga slash al final para evitar dobles slashes (//)
   const API_URL = (import.meta.env.PUBLIC_API_URL || '').replace(/\/$/, '');
 
-  // Helper para construir la URL completa de la imagen (Soluciona los errores 404)
   const getImageUrl = (path) => {
     if (!path) return null;
     if (path.startsWith('http') || path.startsWith('data:')) return path;
@@ -46,7 +43,6 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
     }
   };
 
-  // 3. Convertimos la carga de datos en una función reutilizable (useCallback)
   const fetchTechnologies = useCallback(async () => {
     try {
       setLoadingTechs(true);
@@ -67,19 +63,16 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
       setAvailableTags(response.data);
     } catch (err) {
       console.error("Error cargando tags:", err);
-      // No bloqueamos el flujo si fallan los tags
     } finally {
       setLoadingTags(false);
     }
   }, [API_URL]);
 
-  // Cargar al inicio
   useEffect(() => {
     fetchTechnologies();
     fetchTags();
   }, [fetchTechnologies, fetchTags]);
 
-  // Cargar datos si estamos en modo edición
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title || '');
@@ -118,10 +111,9 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
     }
   };
 
-  // 4. Función mágica: Se ejecuta cuando terminas de crear la tecnología en el Modal
   const handleTechCreated = () => {
-    setTechModalMode('list'); // Volver a la lista en lugar de cerrar
-    fetchTechnologies(); // Recarga la lista para que aparezca la nueva
+    setTechModalMode('list');
+    fetchTechnologies();
   };
 
   const handleTagCreated = () => {
@@ -129,10 +121,8 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
     fetchTags();
   };
 
-  // Función para eliminar tecnología desde el modal
-  const handleDeleteTechClick = (id) => {
-    setTechToDelete(id);
-  };
+  const handleDeleteTechClick = (id) => setTechToDelete(id);
+  const handleDeleteTagClick = (id) => setTagToDelete(id);
 
   const confirmDeleteTech = async () => {
     if (!techToDelete) return;
@@ -149,10 +139,6 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
     } finally {
       setTechToDelete(null);
     }
-  };
-
-  const handleDeleteTagClick = (id) => {
-    setTagToDelete(id);
   };
 
   const confirmDeleteTag = async () => {
@@ -188,7 +174,10 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
       formData.append('title', title);
       formData.append('description_en', descEn);
       formData.append('description_es', descEs);
+      
+      // Enviamos project_url solo si tiene valor, o string vacío si el backend lo acepta
       formData.append('project_url', projectUrl);
+      
       if (repoUrl) formData.append('repo_url', repoUrl);
       
       if (image) {
@@ -205,16 +194,12 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
 
       const headers = {
         'Authorization': `Bearer ${token}`,
-        // IMPORTANTE: No definir Content-Type manualmente con FormData, Axios lo hace mejor
       };
 
       if (initialData) {
-        // Modo Edición (PUT)
-        // Quitamos el slash final '/' porque el servidor redirige si lo ponemos
         await axios.put(`${API_URL}/projects/${initialData.id}`, formData, { headers });
         if (showToast) showToast('¡Proyecto actualizado con éxito!', 'success');
       } else {
-        // Modo Creación (POST)
         await axios.post(`${API_URL}/projects/`, formData, { headers });
         if (showToast) showToast('¡Proyecto creado con éxito!', 'success');
       }
@@ -230,9 +215,9 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
   };
 
   return (
-    <div className="relative"> {/* Necesario relative para el modal */}
+    <div className="relative">
       
-      {/* --- MODAL PARA ADMINISTRAR TECNOLOGÍAS --- */}
+      {/* MODAL TECNOLOGÍAS (Sin cambios importantes, solo contexto) */}
       {showTechModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-2xl">
@@ -243,7 +228,6 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
                   <button onClick={() => setShowTechModal(false)} className="text-secondary hover:text-white">✕</button>
                 </div>
 
-                {/* Modal de confirmación interno */}
                 {techToDelete && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl">
                     <div className="bg-[#100d25] p-6 rounded-xl border border-white/10 max-w-sm w-full text-center mx-4 shadow-2xl">
@@ -274,13 +258,7 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
                           )}
                           <span className="text-white font-medium">{tech.name}</span>
                         </div>
-                        <button 
-                          onClick={() => handleDeleteTechClick(tech.id)}
-                          className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded transition-colors"
-                          title="Eliminar"
-                        >
-                          🗑️
-                        </button>
+                        <button onClick={() => handleDeleteTechClick(tech.id)} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded transition-colors" title="Eliminar">🗑️</button>
                       </div>
                     ))
                   )}
@@ -298,7 +276,7 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
         </div>
       )}
 
-      {/* --- MODAL PARA ADMINISTRAR TAGS --- */}
+      {/* MODAL TAGS (Sin cambios importantes) */}
       {showTagModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-2xl">
@@ -309,7 +287,6 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
                   <button onClick={() => setShowTagModal(false)} className="text-secondary hover:text-white">✕</button>
                 </div>
 
-                {/* Modal de confirmación interno */}
                 {tagToDelete && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl">
                     <div className="bg-[#100d25] p-6 rounded-xl border border-white/10 max-w-sm w-full text-center mx-4 shadow-2xl">
@@ -337,13 +314,7 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
                         <div className="flex items-center gap-3">
                           <span className="text-white font-medium">#{tag.name}</span>
                         </div>
-                        <button 
-                          onClick={() => handleDeleteTagClick(tag.id)}
-                          className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded transition-colors"
-                          title="Eliminar"
-                        >
-                          🗑️
-                        </button>
+                        <button onClick={() => handleDeleteTagClick(tag.id)} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded transition-colors" title="Eliminar">🗑️</button>
                       </div>
                     ))
                   )}
@@ -361,6 +332,7 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
         </div>
       )}
 
+      {/* FORMULARIO PRINCIPAL */}
       <div className="bg-[#151030] p-8 rounded-2xl border border-white/10 max-w-4xl mx-auto shadow-card">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">{initialData ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
@@ -415,12 +387,12 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
           {/* URLs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-white mb-2 font-medium">URL del Proyecto *</label>
+              <label className="block text-white mb-2 font-medium">URL del Proyecto</label> {/* Sin asterisco */}
               <input
                 type="url"
                 value={projectUrl}
                 onChange={(e) => setProjectUrl(e.target.value)}
-                required
+                // Eliminado 'required'
                 className="w-full bg-[#100d25] border border-gray-600 rounded-lg p-3 text-white focus:border-[#915eff] outline-none"
                 placeholder="https://mi-proyecto.com"
               />
@@ -467,14 +439,15 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
             </div>
           </div>
 
-          {/* Selector de Tecnologías con Botón "+" */}
-          <div>
+          {/* Selectores de Tecnologías y Tags... (Igual que antes) */}
+          {/* ... (Se mantiene el código del selector de tecnologías) ... */}
+           <div>
             <div className="flex justify-between items-center mb-3">
               <label className="block text-white font-medium">Tecnologías Utilizadas *</label>
               
               {/* BOTÓN PARA ABRIR MODAL */}
               <button 
-                type="button" // Importante type="button" para no enviar el formulario
+                type="button" 
                 onClick={() => {
                   setTechModalMode('list');
                   setShowTechModal(true);
@@ -571,6 +544,7 @@ const CreateProject = ({ token, onCancel, onSuccess, initialData, showToast }) =
               </div>
             )}
           </div>
+
 
           {/* Botones Finales */}
           <div className="flex justify-end gap-4 pt-4 border-t border-white/10">
