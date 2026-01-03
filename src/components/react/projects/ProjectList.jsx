@@ -1,155 +1,148 @@
-import React, { useState, useMemo } from 'react';
-import ProjectCard from './ProjectCard';
-// 1. Importamos los componentes de Framer Motion
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import ProjectCard from "./ProjectCard";
 
-const ProjectList = ({ projects, technologies, tags, lang, t = {} }) => {
-  // Estado para la categoría principal de filtro: 'all', 'techs', 'tags'
-  const [filterCategory, setFilterCategory] = useState('all');
-  // Estado para el ID del filtro específico seleccionado (un ID de tecnología o tag)
-  const [selectedFilterId, setSelectedFilterId] = useState(null);
+const ProjectList = ({ projects = [], t = {}, lang }) => {
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [showAll, setShowAll] = useState(false);
 
-  const handleCategoryChange = (category) => {
-    setFilterCategory(category);
-    // Resetea el filtro específico al cambiar de categoría principal
-    setSelectedFilterId(null);
-  };
+  const INITIAL_COUNT = 6;
 
-  const filteredProjects = useMemo(() => {
-    // Si no hay un filtro específico seleccionado, muestra todos los proyectos
-    if (selectedFilterId === null) {
-      return projects;
-    }
-    
-    // Filtra según la categoría y el ID seleccionado
-    if (filterCategory === 'techs') {
-      return projects.filter(p => 
-        p.technologies.some(t => t.id === selectedFilterId)
-      );
-    }
-    if (filterCategory === 'tags') {
-      return projects.filter(p => 
-        p.tags.some(t => t.id === selectedFilterId)
-      );
-    }
-    
-    // Por defecto, muestra todos los proyectos
-    return projects;
-  }, [projects, filterCategory, selectedFilterId]);
+  // 1. OBTENER LISTAS SEPARADAS
+  // Tecnologías únicas
+  const techFilters = Array.from(new Set(
+    projects.flatMap(p => p.technologies ? p.technologies.map(tech => tech.name) : [])
+  )).sort();
 
-  // Componente para las pestañas de filtro principal
-  const MainFilterTab = ({ category, label }) => (
+  // Tags únicos
+  const tagFilters = Array.from(new Set(
+    projects.flatMap(p => p.tags ? p.tags.map(tag => tag.name) : [])
+  )).sort();
+
+  // 2. LÓGICA DE FILTRADO (Se mantiene igual, busca en ambos lados)
+  const filteredProjects = activeFilter === "All"
+    ? projects
+    : projects.filter(project => {
+        const matchTag = project.tags?.some(tag => tag.name === activeFilter);
+        const matchTech = project.technologies?.some(tech => tech.name === activeFilter);
+        return matchTag || matchTech;
+      });
+
+  const visibleProjects = showAll ? filteredProjects : filteredProjects.slice(0, INITIAL_COUNT);
+
+  useEffect(() => {
+    setShowAll(false);
+  }, [activeFilter]);
+
+  // Componente de Botón Reutilizable para mantener el código limpio
+  const FilterButton = ({ name, label }) => (
     <button
-      onClick={() => handleCategoryChange(category)}
-      className={`px-5 py-2 rounded-t-lg text-sm font-bold transition-all ${
-        filterCategory === category
-          ? 'bg-tertiary text-white'
-          : 'bg-transparent text-secondary hover:bg-tertiary/50 hover:text-white'
+      onClick={() => setActiveFilter(name)}
+      className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-300 border ${
+        activeFilter === name
+          ? "bg-[#915eff] text-white border-[#915eff] shadow-md shadow-purple-500/30"
+          : "bg-tertiary text-secondary border-white/10 hover:text-white hover:border-white/50"
       }`}
     >
-      {label}
+      {label || name}
     </button>
   );
-
-  // Componente para los botones de sub-filtro (tecnologías/tags)
-  const SubFilterButton = ({ id, label }) => (
-    <button
-      onClick={() => setSelectedFilterId(id)}
-      className={`px-4 py-2 rounded-full text-xs font-medium transition-all border ${
-        selectedFilterId === id
-          ? 'bg-[#915eff] text-white border-[#915eff]'
-          : 'bg-tertiary text-secondary border-transparent hover:bg-white/10 hover:text-white'
-      }`}
-    >
-      {label}
-    </button>
-  );
-
-  // 2. Definimos variantes de animación para los contenedores y sus ítems
-  const subFilterContainerVariants = {
-    hidden: { opacity: 0, height: 0, marginBottom: 0 },
-    visible: {
-      opacity: 1,
-      height: 'auto',
-      marginBottom: '3rem', // mb-12
-      transition: {
-        when: "beforeChildren",
-        staggerChildren: 0.05
-      }
-    },
-    exit: { opacity: 0, height: 0, marginBottom: 0 }
-  };
-
-  const subFilterItemVariants = {
-    hidden: { opacity: 0, y: -10 },
-    visible: { opacity: 1, y: 0 }
-  };
 
   return (
-    <div>
-      {/* Pestañas de Filtro Principal */}
-      <div className="flex justify-center border-b border-white/10 mb-8">
-        <MainFilterTab category="all" label={t['projects.filter_everything'] || "Todos"}/>
-        <MainFilterTab category="techs" label={t['projects.filter_technologies'] || "Filtrar por Tecnología"}/>
-        <MainFilterTab category="tags" label={t['projects.filter_tags'] || "Filtrar por Tags"}/>
-      </div>
+    <div className="flex flex-col items-center w-full">
+      
+      {/* --- SECCIÓN DE FILTROS --- */}
+      <div className="w-full max-w-4xl mb-12 flex flex-col gap-6">
+        
+        {/* Botón Principal: Ver Todo */}
+        <div className="flex justify-center">
+             <FilterButton name="All" label={lang === 'es' ? 'Ver Todo' : 'View All'} />
+        </div>
 
-      {/* Botones de Sub-Filtro (renderizado condicional) */}
-      <div className="min-h-[40px]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={filterCategory} // La clave cambia, disparando la animación de entrada/salida
-            className="flex flex-wrap justify-center gap-2"
-            variants={subFilterContainerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            {filterCategory === 'techs' && (
-              <>
-                <motion.div variants={subFilterItemVariants}>
-                  <SubFilterButton id={null} label={t['projects.filter_technologies_everything'] || "Todas las tecnologías"} />
-                </motion.div>
-                {technologies.map(tech => (
-                  <motion.div variants={subFilterItemVariants} key={`tech-${tech.id}`}>
-                    <SubFilterButton id={tech.id} label={tech.name} />
-                  </motion.div>
-                ))}
-              </>
+        <div className="flex flex-col md:flex-row gap-8 justify-center items-start md:items-center">
+            
+            {/* GRUPO 1: TECNOLOGÍAS */}
+            {techFilters.length > 0 && (
+                <div className="flex flex-col items-center md:items-end w-full">
+                    <h3 className="text-white text-sm font-bold mb-3 uppercase tracking-wider opacity-70">
+                        {lang === 'es' ? 'Tecnologías' : 'Tech Stack'}
+                    </h3>
+                    <div className="flex flex-wrap justify-center md:justify-end gap-2">
+                        {techFilters.map(tech => (
+                            <FilterButton key={tech} name={tech} />
+                        ))}
+                    </div>
+                </div>
             )}
 
-            {filterCategory === 'tags' && (
-              <>
-                <motion.div variants={subFilterItemVariants}>
-                  <SubFilterButton id={null} label={t['projects.filter_tags_everything'] || "Todos los tags"} />
-                </motion.div>
-                {tags.map(tag => (
-                  <motion.div variants={subFilterItemVariants} key={`tag-${tag.id}`}>
-                    <SubFilterButton id={tag.id} label={`#${tag.name}`} />
-                  </motion.div>
-                ))}
-              </>
+            {/* Separador vertical en desktop */}
+            <div className="hidden md:block w-[1px] h-16 bg-white/10"></div>
+
+            {/* GRUPO 2: TAGS */}
+            {tagFilters.length > 0 && (
+                <div className="flex flex-col items-center md:items-start w-full">
+                    <h3 className="text-white text-sm font-bold mb-3 uppercase tracking-wider opacity-70">
+                        {lang === 'es' ? 'Categorías' : 'Categories'}
+                    </h3>
+                    <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                        {tagFilters.map(tag => (
+                            <FilterButton key={tag} name={tag} />
+                        ))}
+                    </div>
+                </div>
             )}
-          </motion.div>
-        </AnimatePresence>
+        </div>
       </div>
 
-      {/* Project Cards Grid */}
-      <motion.div layout className="flex flex-wrap justify-center gap-7">
-        <AnimatePresence>
-          {filteredProjects.length > 0 ? (
-            filteredProjects.map(project => (
-              <motion.div layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.4 }} key={project.id}>
-                <ProjectCard project={project} lang={lang} />
-              </motion.div>
-            ))
-          ) : (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-secondary col-span-full py-10">
-              <p>{t['projects.no_projects_found'] || 'No hay proyectos que coincidan con el filtro seleccionado.'}</p>
+      {/* --- GRID DE PROYECTOS --- */}
+      <motion.div 
+        layout 
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7 w-full"
+      >
+        <AnimatePresence mode="popLayout">
+          {visibleProjects.map((project) => (
+            <motion.div
+              layout
+              key={project.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3 }}
+              className="h-full"
+            >
+              <ProjectCard {...project} t={t} lang={lang} />
             </motion.div>
-          )}
+          ))}
         </AnimatePresence>
       </motion.div>
+      
+      {/* Mensaje Sin Resultados */}
+      {visibleProjects.length === 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mt-10">
+            <p className="text-secondary text-lg">
+                No projects found for: <span className="text-[#915eff] font-bold">{activeFilter}</span>
+            </p>
+            <button onClick={() => setActiveFilter("All")} className="mt-4 text-white underline hover:text-[#915eff]">
+                Clear filters
+            </button>
+        </motion.div>
+      )}
+
+      {/* Botón Ver Más */}
+      {filteredProjects.length > INITIAL_COUNT && (
+        <motion.div layout className="mt-12 w-full flex justify-center">
+            <button
+            onClick={() => setShowAll(!showAll)}
+            className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-3 px-8 rounded-full transition-all flex items-center gap-2 text-sm uppercase tracking-wider"
+            >
+            {showAll ? (
+                <>{lang === 'es' ? 'Mostrar Menos' : 'Show Less'} ↑</>
+            ) : (
+                <>{lang === 'es' ? 'Ver Todos' : 'View All'} ({filteredProjects.length - INITIAL_COUNT}+) ↓</>
+            )}
+            </button>
+        </motion.div>
+      )}
     </div>
   );
 };
