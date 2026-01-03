@@ -1,0 +1,59 @@
+---
+import { styles } from "../../styles";
+// Importamos el nuevo componente de Lista
+import CertificatesList from "../react/certificates/CertificatesList.jsx";
+
+interface Props {
+  t: Record<string, any>;
+  lang: string;
+}
+
+const { t = {}, lang } = Astro.props;
+
+// --- OBTENER DATOS ---
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+let certificates = [];
+
+try {
+  const res = await fetch(`${API_URL}/certificates`);
+  if (res.ok) {
+    certificates = await res.json();
+  } else {
+    // Mock Data
+    certificates = [
+      { id: 1, title: "React - The Complete Guide", school: "Udemy", link: "#", image_route: "" },
+      { id: 2, title: "Advanced Node.js", school: "Platzi", link: "#", image_route: "" },
+      { id: 3, title: "FullStack Open", school: "University of Helsinki", link: "#", image_route: "" },
+      { id: 4, title: "AWS Cloud Practitioner", school: "AWS", link: "#", image_route: "" },
+    ];
+  }
+} catch (e) {
+  console.error("Error fetching certificates:", e);
+}
+---
+
+<section id="certificates" class={`${styles.padding} max-w-7xl mx-auto relative z-0`}>
+  
+  <div class="mb-12">
+    <span class={`${styles.sectionSubText}`}>
+      {t["certificates.subtitle"] || "My learning path"}
+    </span>
+    <h2 class={`${styles.sectionHeadText}`}>
+      {t["certificates.title"] || "Certifications."}
+    </h2>
+  </div>
+
+  {/* Usamos el componente React con client:visible para la interactividad */}
+  {certificates.length > 0 ? (
+      <CertificatesList 
+        client:visible 
+        certificates={certificates} 
+        lang={lang} 
+      />
+  ) : (
+      <p class="text-secondary text-center py-10">
+          No certificates found.
+      </p>
+  )}
+
+</section>

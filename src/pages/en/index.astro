@@ -5,6 +5,7 @@ import Hero from '../../components/astro/Hero.astro';
 import Projects from '../../components/astro/Projects.astro';
 import About from '../../components/astro/About.astro';
 import Experience from '../../components/astro/Experience.astro';
+import Certificates from '../../components/astro/Certificates.astro';
 import { getTranslations } from '../../i18n/utils';
 
 const currentLang = Astro.currentLocale || 'en';
@@ -20,5 +21,6 @@ const t = await getTranslations(currentLang);
     <About lang={currentLang} t={t} />
     <Experience lang={currentLang} t={t} />
     <Projects lang={currentLang} t={t} />
+    <Certificates lang={currentLang} t={t} />
   </main>
 </Layout>
