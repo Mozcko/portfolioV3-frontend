@@ -1,0 +1,15 @@
+---
+import { styles } from "../../styles";
+import ContactForm from "../react/contact/Contact.jsx";
+
+interface Props {
+  t: Record<string, any>;
+  lang: string;
+}
+
+const { t = {}, lang } = Astro.props;
+---
+
+<section id="contact" class={`${styles.padding} max-w-7xl mx-auto relative z-0`}>
+  <ContactForm client:visible t={t} lang={lang} />
+</section>

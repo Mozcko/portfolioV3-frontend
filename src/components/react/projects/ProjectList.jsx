@@ -136,9 +136,9 @@ const ProjectList = ({ projects = [], t = {}, lang }) => {
             className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-3 px-8 rounded-full transition-all flex items-center gap-2 text-sm uppercase tracking-wider"
             >
             {showAll ? (
-                <>{lang === 'es' ? 'Mostrar Menos' : 'Show Less'} ↑</>
+                <>{t["general.show_less"] || "Show Less"} ↑</>
             ) : (
-                <>{lang === 'es' ? 'Ver Todos' : 'View All'} ({filteredProjects.length - INITIAL_COUNT}+) ↓</>
+                <>{t["general.view_all"] || "View All"} ({filteredProjects.length - INITIAL_COUNT}+) ↓</>
             )}
             </button>
         </motion.div>

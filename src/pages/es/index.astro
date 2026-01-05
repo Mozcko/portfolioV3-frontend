@@ -6,6 +6,7 @@ import Projects from '../../components/astro/Projects.astro';
 import About from '../../components/astro/About.astro';
 import Experience from '../../components/astro/Experience.astro';
 import Certificates from '../../components/astro/Certificates.astro';
+import Contact from '../../components/astro/Contact.astro';
 import { getTranslations } from '../../i18n/utils';
 
 const currentLang = Astro.currentLocale || 'es';
@@ -14,7 +15,7 @@ const t = await getTranslations(currentLang);
 ---
 
 <Layout title="Mozcko | Portafolio" lang={currentLang}>
-  <main class="relative z-0">
+  <main class="relative z-0 bg-primary">
     <div class="bg-hero-pattern bg-cover bg-no-repeat bg-center">
       {/* 2. Pasamos 'currentLang' y el objeto 't' (traducciones) a los componentes Astro */}
       <Navbar currentLang={currentLang} t={t} />
@@ -24,5 +25,6 @@ const t = await getTranslations(currentLang);
     <Experience lang={currentLang} t={t} />
     <Projects lang={currentLang} t={t} />
     <Certificates lang={currentLang} t={t} />
+    <Contact lang={currentLang} t={t} />
   </main>
 </Layout>

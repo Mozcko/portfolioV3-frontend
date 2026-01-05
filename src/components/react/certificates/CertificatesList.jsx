@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CertificateCard from "./CertificateCard";
 
-const CertificatesList = ({ certificates = [], lang }) => {
+const CertificatesList = ({ certificates = [], lang, t = {} }) => {
   const [showAll, setShowAll] = useState(false);
   
   // Configuración: Cuántos mostrar inicialmente (3 es una fila en desktop)
@@ -36,12 +36,14 @@ const CertificatesList = ({ certificates = [], lang }) => {
         >
           {showAll ? (
             <>
-              {lang === 'es' ? 'Mostrar Menos' : 'Show Less'} 
+              {/* USAMOS LA TRADUCCIÓN */}
+              {t["general.show_less"] || "Show Less"} 
               <span className="text-lg">↑</span>
             </>
           ) : (
             <>
-              {lang === 'es' ? `Ver todos (${certificates.length})` : `View all (${certificates.length})`}
+              {/* USAMOS LA TRADUCCIÓN */}
+              {t["general.view_all"] || "View All"} ({certificates.length})
               <span className="text-lg">↓</span>
             </>
           )}
