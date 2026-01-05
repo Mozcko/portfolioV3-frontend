@@ -4,7 +4,6 @@ import { menu, close } from "../../assets";
 import { styles } from "../../styles";
 
 // 1. OPTIMIZACIÓN: Importamos la imagen y el componente Image de Astro
-import { Image } from 'astro:assets';
 import logoImg from "../../assets/logo.jpeg";
 
 interface Props {
@@ -34,12 +33,12 @@ const navLinks = [
       onclick="window.scrollTo(0, 0);"
       data-astro-prefetch
     >
-      <Image 
-        src={logoImg} 
+      <img 
+        src={logoImg.src} 
         alt="logo" 
         class="w-10 h-10 object-cover rounded-full border-2 border-white/10"
-        width={40} 
-        height={40}
+        width="40" 
+        height="40"
       />
       <p class='text-white text-[18px] font-bold cursor-pointer flex '>
         Mozcko &nbsp;
