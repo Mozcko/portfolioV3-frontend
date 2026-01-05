@@ -36,6 +36,11 @@ const Contact = ({ t = {}, lang }) => {
   });
   const [loading, setLoading] = useState(false);
 
+  // Obtenemos las variables de entorno
+  const SERVICE_ID = import.meta.env.PUBLIC_EMAILJS_SERVICE_ID;
+  const TEMPLATE_ID = import.meta.env.PUBLIC_EMAILJS_TEMPLATE_ID;
+  const PUBLIC_KEY = import.meta.env.PUBLIC_EMAILJS_PUBLIC_KEY;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -45,12 +50,43 @@ const Contact = ({ t = {}, lang }) => {
     e.preventDefault();
     setLoading(true);
 
-    // --- MOCK / LÓGICA DE ENVÍO ---
-    setTimeout(() => {
-        setLoading(false);
-        alert(t["contact.form.success"] || "Message sent!");
-        setForm({ name: "", email: "", message: "" });
-    }, 2000);
+    // Validación básica
+    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+      alert("Error de configuración: Faltan las credenciales de EmailJS en el archivo .env");
+      setLoading(false);
+      return;
+    }
+
+    emailjs
+      .send(
+        SERVICE_ID,
+        TEMPLATE_ID,
+        {
+          from_name: form.name,
+          to_name: "Mozcko", // Tu nombre o el que configures en el template
+          from_email: form.email,
+          to_email: "tu_email@ejemplo.com", // Opcional, depende de tu template
+          message: form.message,
+        },
+        PUBLIC_KEY
+      )
+      .then(
+        () => {
+          setLoading(false);
+          alert(t["contact.form.success"] || "¡Mensaje enviado con éxito!");
+          
+          setForm({
+            name: "",
+            email: "",
+            message: "",
+          });
+        },
+        (error) => {
+          setLoading(false);
+          console.error("FAILED...", error);
+          alert(t["contact.form.error"] || "Hubo un error al enviar el mensaje.");
+        }
+      );
   };
 
   // Clases CSS reutilizables para el efecto "Floating Label"
@@ -72,10 +108,6 @@ const Contact = ({ t = {}, lang }) => {
     focus:ring-1 focus:ring-[#915eff]
   `;
 
-  // Esta clase maneja la magia:
-  // 1. Por defecto (o con texto): Está arriba (-top-7), pequeño (scale-75) y con color primario.
-  // 2. peer-placeholder-shown: Si el input está vacío y sin foco, baja (top-4) y crece (scale-100).
-  // 3. peer-focus: Si recibe foco, vuelve a subir inmediatamente.
   const labelClasses = `
     absolute 
     left-6 
@@ -85,12 +117,12 @@ const Contact = ({ t = {}, lang }) => {
     origin-[0] 
     pointer-events-none
     
-    /* Estado: Input Vacío (Placeholder visible) -> Label abajo (como placeholder) */
+    /* Estado: Input Vacío -> Label abajo */
     peer-placeholder-shown:top-4 
     peer-placeholder-shown:scale-100 
     peer-placeholder-shown:text-secondary 
     
-    /* Estado: Foco o Texto Escrito -> Label flotando arriba */
+    /* Estado: Foco o Texto -> Label arriba */
     peer-focus:-top-7 
     peer-focus:scale-75 
     peer-focus:text-[#915eff] 
@@ -129,7 +161,7 @@ const Contact = ({ t = {}, lang }) => {
               id='name'
               value={form.name}
               onChange={handleChange}
-              placeholder="Nombre" // El texto aquí da igual, pero NO debe estar vacío para que funcione el selector CSS
+              placeholder="Nombre"
               className={inputClasses}
               required
             />
@@ -164,7 +196,7 @@ const Contact = ({ t = {}, lang }) => {
               value={form.message}
               onChange={handleChange}
               placeholder="Mensaje"
-              className={`${inputClasses} resize-none`} // Agregamos resize-none
+              className={`${inputClasses} resize-none`}
               required
             />
             <label htmlFor='message' className={labelClasses}>
