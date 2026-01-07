@@ -79,8 +79,8 @@ const ProjectCard = ({
 
       {/* Tecnologías */}
       <div className="mt-4 flex flex-wrap gap-2">
-        {technologies.map((tech) => (
-          <div key={tech.id} className="flex items-center gap-1.5 bg-black-200/50 px-2 py-1 rounded-md border border-white/5">
+        {technologies.map((tech, index) => (
+          <div key={tech.id || index} className="flex items-center gap-1.5 bg-black-200/50 px-2 py-1 rounded-md border border-white/5">
              {tech.icon && <img src={getImageUrl(tech.icon)} alt={tech.name} className="w-3 h-3 object-contain" />}
              <p className="text-white text-[10px] uppercase tracking-wider">{tech.name}</p>
           </div>
@@ -89,8 +89,8 @@ const ProjectCard = ({
       
       {/* Tags */}
       <div className='mt-3 flex flex-wrap gap-2'>
-        {tags.map((tag) => (
-          <p key={tag.id} className={`text-[14px] text-blue-400`}>
+        {tags.map((tag, index) => (
+          <p key={tag.id || index} className={`text-[14px] text-blue-400`}>
             #{tag.name}
           </p>
         ))}
