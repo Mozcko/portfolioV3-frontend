@@ -29,17 +29,19 @@ const CertificateCard = ({ index, title, school, link, image_route }) => {
         />
         
         {/* Overlay con Icono de Link al hacer Hover */}
-        <div className="absolute inset-0 flex justify-end m-3 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-          <a
-            href={link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-10 h-10 rounded-full bg-black/70 flex justify-center items-center hover:bg-[#915eff] transition-colors border border-white/20"
-            title="Ver Certificado"
-          >
-            <span className="text-xl">🔗</span>
-          </a>
-        </div>
+        {link && (
+          <div className="absolute inset-0 flex justify-end m-3 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full bg-black/70 flex justify-center items-center hover:bg-[#915eff] transition-colors border border-white/20"
+              title="Ver Certificado"
+            >
+              <span className="text-xl">🔗</span>
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Contenido */}
@@ -52,11 +54,13 @@ const CertificateCard = ({ index, title, school, link, image_route }) => {
         </p>
         
         {/* Botón secundario si no hicieron click en la imagen */}
-        <div className="mt-auto pt-2">
-            <a href={link} target="_blank" rel="noopener noreferrer" className="text-[#915eff] text-[14px] hover:text-white transition-colors flex items-center gap-2">
-                Ver Credencial <span>→</span>
-            </a>
-        </div>
+        {link && (
+          <div className="mt-auto pt-2">
+              <a href={link} target="_blank" rel="noopener noreferrer" className="text-[#915eff] text-[14px] hover:text-white transition-colors flex items-center gap-2">
+                  Ver Credencial <span>→</span>
+              </a>
+          </div>
+        )}
       </div>
     </motion.div>
   );

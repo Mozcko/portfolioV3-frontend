@@ -5,8 +5,18 @@ import ProjectCard from "./ProjectCard";
 const ProjectList = ({ projects = [], t = {}, lang }) => {
   const [activeFilter, setActiveFilter] = useState("All");
   const [showAll, setShowAll] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const INITIAL_COUNT = 6;
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    handleResize(); // Check inicial
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const initialCount = isMobile ? 3 : 6;
 
   // 1. OBTENER LISTAS SEPARADAS
   // Tecnologías únicas
@@ -28,7 +38,7 @@ const ProjectList = ({ projects = [], t = {}, lang }) => {
         return matchTag || matchTech;
       });
 
-  const visibleProjects = showAll ? filteredProjects : filteredProjects.slice(0, INITIAL_COUNT);
+  const visibleProjects = showAll ? filteredProjects : filteredProjects.slice(0, initialCount);
 
   useEffect(() => {
     setShowAll(false);
@@ -129,7 +139,7 @@ const ProjectList = ({ projects = [], t = {}, lang }) => {
       )}
 
       {/* Botón Ver Más */}
-      {filteredProjects.length > INITIAL_COUNT && (
+      {filteredProjects.length > initialCount && (
         <motion.div layout className="mt-12 w-full flex justify-center">
             <button
             onClick={() => setShowAll(!showAll)}
@@ -138,7 +148,7 @@ const ProjectList = ({ projects = [], t = {}, lang }) => {
             {showAll ? (
                 <>{t["general.show_less"] || "Show Less"} ↑</>
             ) : (
-                <>{t["general.view_all"] || "View All"} ({filteredProjects.length - INITIAL_COUNT}+) ↓</>
+                <>{t["general.view_all"] || "View All"} ({filteredProjects.length - initialCount}+) ↓</>
             )}
             </button>
         </motion.div>

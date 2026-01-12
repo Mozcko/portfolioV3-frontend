@@ -1,15 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CertificateCard from "./CertificateCard";
 
 const CertificatesList = ({ certificates = [], lang, t = {} }) => {
   const [showAll, setShowAll] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
-  // Configuración: Cuántos mostrar inicialmente (3 es una fila en desktop)
-  const INITIAL_COUNT = 3;
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640); // 640px es el breakpoint 'sm' de Tailwind
+    };
+
+    handleResize(); // Check inicial
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   
-  // Si no hay botón "ver más", mostramos todo (caso < 3 certificados)
-  const displayedCertificates = showAll ? certificates : certificates.slice(0, INITIAL_COUNT);
+  // Configuración: 1 en móvil, 3 en desktop
+  const initialCount = isMobile ? 1 : 3;
+  
+  // Si no hay botón "ver más", mostramos todo
+  const displayedCertificates = showAll ? certificates : certificates.slice(0, initialCount);
   
   return (
     <div className="flex flex-col items-center">
@@ -27,7 +38,7 @@ const CertificatesList = ({ certificates = [], lang, t = {} }) => {
       </div>
 
       {/* Botón de Ver Más / Ver Menos */}
-      {certificates.length > INITIAL_COUNT && (
+      {certificates.length > initialCount && (
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
